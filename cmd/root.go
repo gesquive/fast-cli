@@ -13,8 +13,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var displayVersion string
 var cfgFile string
 var useHTTPS bool
+var showVersion bool
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -22,13 +24,14 @@ var RootCmd = &cobra.Command{
 	Short: "Estimates your current internet download speed",
 	Long: `Estimates your current internet download speed using Netflix's fast.com service.
 
-fast-cli caclulates this estimage by performing a series of downloads from Netflix's fast.com servers`,
+fast-cli caclulates this estimate by performing a series of downloads from Netflix's fast.com servers.`,
 	Run: run,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
+func Execute(version string) {
+	displayVersion = version
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
@@ -40,7 +43,7 @@ func init() {
 
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.fast-cli.yaml)")
 	RootCmd.PersistentFlags().BoolVarP(&useHTTPS, "use-https", "s", false, "Use HTTPS when connecting")
-	//TODO: Add version flag
+	RootCmd.PersistentFlags().BoolVar(&showVersion, "version", false, "Display the version number and exit")
 	//TODO: Allow to estimate using time or size
 }
 
@@ -48,6 +51,11 @@ func initConfig() {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	if showVersion {
+		fmt.Println(displayVersion)
+		os.Exit(0)
+	}
+
 	fmt.Printf("Estimating current download speed\n")
 	url := "http://api.fast.com/netflix/speedtest?https=false"
 	if useHTTPS {
@@ -69,7 +77,7 @@ func calculateBandwidth(url string) (err error) {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "fast-cli")
+	req.Header.Set("User-Agent", displayVersion)
 
 	// Get the HTTP Response
 	resp, err := client.Do(req)
