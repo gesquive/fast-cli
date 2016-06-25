@@ -95,11 +95,11 @@ func calculateBandwidth(url string) (err error) {
 	bytesToRead := uint64(calculatedLength)
 
 	// Start reading
-	bandwidthReader := BandwidthReader{}
+	bandwidthMeter := BandwidthMeter{}
 	ch := make(chan *copyResults, 1)
 
 	go func() {
-		bytesWritten, err := io.Copy(&bandwidthReader, resp.Body)
+		bytesWritten, err := io.Copy(&bandwidthMeter, resp.Body)
 		ch <- &copyResults{uint64(bytesWritten), err}
 	}()
 
@@ -111,14 +111,14 @@ func calculateBandwidth(url string) (err error) {
 				os.Exit(1)
 			}
 			fmt.Printf("\r%s - %s  \n",
-				fmtBitsPerSec(bandwidthReader.Bandwidth()),
-				fmtPercent(bandwidthReader.BytesRead(), bytesToRead))
-			fmt.Printf("Completed in %.1f seconds\n", bandwidthReader.Duration().Seconds())
+				fmtBitsPerSec(bandwidthMeter.Bandwidth()),
+				fmtPercent(bandwidthMeter.BytesRead(), bytesToRead))
+			fmt.Printf("Completed in %.1f seconds\n", bandwidthMeter.Duration().Seconds())
 			return nil
 		case <-time.After(100 * time.Millisecond):
 			fmt.Printf("\r%s - %s",
-				fmtBitsPerSec(bandwidthReader.Bandwidth()),
-				fmtPercent(bandwidthReader.BytesRead(), bytesToRead))
+				fmtBitsPerSec(bandwidthMeter.Bandwidth()),
+				fmtPercent(bandwidthMeter.BytesRead(), bytesToRead))
 		}
 	}
 }
