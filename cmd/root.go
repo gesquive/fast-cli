@@ -10,6 +10,9 @@ import (
 	"strconv"
 	"time"
 
+	// "github.com/gesquive/fast-cli/fast"
+	"github.com/gesquive/fast-cli/format"
+	"github.com/gesquive/fast-cli/meters"
 	"github.com/spf13/cobra"
 )
 
@@ -56,11 +59,15 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
+	// TODO: allow speedtest to act as backup in case we can't get urls
 	fmt.Printf("Estimating current download speed\n")
 	url := "http://api.fast.com/netflix/speedtest?https=false"
 	if useHTTPS {
 		url = "https://api.fast.com/netflix/speedtest?https=true"
 	}
+
+	// urls := fast.GetDlUrls()
+	// fmt.Printf("%+v\n", urls)
 
 	err := calculateBandwidth(url)
 	if err != nil {
@@ -95,7 +102,7 @@ func calculateBandwidth(url string) (err error) {
 	bytesToRead := uint64(calculatedLength)
 
 	// Start reading
-	bandwidthMeter := BandwidthMeter{}
+	bandwidthMeter := meters.BandwidthMeter{}
 	ch := make(chan *copyResults, 1)
 
 	go func() {
@@ -103,6 +110,7 @@ func calculateBandwidth(url string) (err error) {
 		ch <- &copyResults{uint64(bytesWritten), err}
 	}()
 
+	// TODO: Need to add ability to dl 3 files at time
 	for {
 		select {
 		case results := <-ch:
@@ -111,14 +119,14 @@ func calculateBandwidth(url string) (err error) {
 				os.Exit(1)
 			}
 			fmt.Printf("\r%s - %s  \n",
-				fmtBitsPerSec(bandwidthMeter.Bandwidth()),
-				fmtPercent(bandwidthMeter.BytesRead(), bytesToRead))
+				format.BitsPerSec(bandwidthMeter.Bandwidth()),
+				format.Percent(bandwidthMeter.BytesRead(), bytesToRead))
 			fmt.Printf("Completed in %.1f seconds\n", bandwidthMeter.Duration().Seconds())
 			return nil
 		case <-time.After(100 * time.Millisecond):
 			fmt.Printf("\r%s - %s",
-				fmtBitsPerSec(bandwidthMeter.Bandwidth()),
-				fmtPercent(bandwidthMeter.BytesRead(), bytesToRead))
+				format.BitsPerSec(bandwidthMeter.Bandwidth()),
+				format.Percent(bandwidthMeter.BytesRead(), bytesToRead))
 		}
 	}
 }
