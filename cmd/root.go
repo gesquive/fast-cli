@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	// "github.com/gesquive/fast-cli/fast"
+	"github.com/gesquive/fast-cli/fast"
 	"github.com/gesquive/fast-cli/format"
 	"github.com/gesquive/fast-cli/meters"
 	"github.com/spf13/cobra"
@@ -59,17 +59,15 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	// TODO: allow speedtest to act as backup in case we can't get urls
 	fmt.Printf("Estimating current download speed\n")
-	url := "http://api.fast.com/netflix/speedtest?https=false"
-	if useHTTPS {
-		url = "https://api.fast.com/netflix/speedtest?https=true"
+	urls := fast.GetDlUrls(1)
+	fmt.Printf("%+v\n", urls)
+
+	if len(urls) == 0 {
+		urls = append(urls, fast.GetDefaultURL())
 	}
 
-	// urls := fast.GetDlUrls()
-	// fmt.Printf("%+v\n", urls)
-
-	err := calculateBandwidth(url)
+	err := calculateBandwidth(urls[0])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 	}
