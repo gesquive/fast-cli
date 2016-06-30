@@ -58,57 +58,66 @@ func run(cmd *cobra.Command, args []string) {
 		fmt.Println(displayVersion)
 		os.Exit(0)
 	}
-
+	count := uint64(3)
 	fmt.Printf("Estimating current download speed\n")
-	urls := fast.GetDlUrls(1)
-	fmt.Printf("%+v\n", urls)
+	urls := fast.GetDlUrls(count)
+	// fmt.Printf("%+v\n", urls)
 
 	if len(urls) == 0 {
+		fmt.Printf("Using fallback endpoint\n")
 		urls = append(urls, fast.GetDefaultURL())
 	}
 
-	err := calculateBandwidth(urls[0])
+	err := calculateBandwidth(urls)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 	}
 }
 
-func calculateBandwidth(url string) (err error) {
-	// fmt.Printf("downloading %s\n", url)
+func calculateBandwidth(urls []string) (err error) {
+	// fmt.Printf("downloading %s\n", urls)
 	client := &http.Client{}
+	count := uint64(len(urls))
 
-	// Create the HTTP request
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("User-Agent", displayVersion)
-
-	// Get the HTTP Response
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Try to get the content length
-	contentLength := resp.Header.Get("Content-Length")
-	calculatedLength, err := strconv.Atoi(contentLength)
-	if err != nil {
-		calculatedLength = 26214400
-	}
-	bytesToRead := uint64(calculatedLength)
-
-	// Start reading
+	//TODO: Make multiple channels and n requests, then run n copies
 	bandwidthMeter := meters.BandwidthMeter{}
 	ch := make(chan *copyResults, 1)
+	// var requests = make([]http.Request, count)
+	bytesToRead := uint64(0)
+	completed := uint64(0)
 
-	go func() {
-		bytesWritten, err := io.Copy(&bandwidthMeter, resp.Body)
-		ch <- &copyResults{uint64(bytesWritten), err}
-	}()
+	for i := uint64(0); i < count; i++ {
+		// Create the HTTP request
+		request, err := http.NewRequest("GET", urls[i], nil)
+		if err != nil {
+			return err
+		}
+		request.Header.Set("User-Agent", displayVersion)
 
-	// TODO: Need to add ability to dl 3 files at time
+		// Get the HTTP Response
+		response, err := client.Do(request)
+		if err != nil {
+			return err
+		}
+		defer response.Body.Close()
+
+		// Try to get the content length
+		if bytesToRead == 0 {
+			contentLength := response.Header.Get("Content-Length")
+			calculatedLength, err := strconv.Atoi(contentLength)
+			if err != nil {
+				calculatedLength = 26214400
+			}
+			bytesToRead = uint64(calculatedLength)
+		}
+
+		// Start reading
+		go asyncCopy(i, ch, &bandwidthMeter, response.Body)
+	}
+
+	// fmt.Printf("bytes=%d\n", bytesToRead)
+	// fmt.Printf("totalBytes=%d\n", totalBytes)
+
 	for {
 		select {
 		case results := <-ch:
@@ -116,11 +125,16 @@ func calculateBandwidth(url string) (err error) {
 				fmt.Fprintf(os.Stdout, "\n%v\n", results.err)
 				os.Exit(1)
 			}
-			fmt.Printf("\r%s - %s  \n",
+
+			fmt.Printf("\r%s - %s",
 				format.BitsPerSec(bandwidthMeter.Bandwidth()),
 				format.Percent(bandwidthMeter.BytesRead(), bytesToRead))
+			completed++
+			// if completed >= count {
+			fmt.Printf("  \n")
 			fmt.Printf("Completed in %.1f seconds\n", bandwidthMeter.Duration().Seconds())
 			return nil
+			// }
 		case <-time.After(100 * time.Millisecond):
 			fmt.Printf("\r%s - %s",
 				format.BitsPerSec(bandwidthMeter.Bandwidth()),
@@ -130,6 +144,19 @@ func calculateBandwidth(url string) (err error) {
 }
 
 type copyResults struct {
+	index        uint64
 	bytesWritten uint64
 	err          error
+}
+
+func asyncCopy(index uint64, channel chan *copyResults, writer io.Writer, reader io.Reader) {
+	bytesWritten, err := io.Copy(writer, reader)
+	channel <- &copyResults{index, uint64(bytesWritten), err}
+}
+
+func sumArr(array []uint64) (sum uint64) {
+	for i := 0; i < len(array); i++ {
+		sum = sum + array[i]
+	}
+	return
 }
