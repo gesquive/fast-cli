@@ -80,6 +80,7 @@ func calculateBandwidth(urls []string) (err error) {
 	count := uint64(len(urls))
 
 	//TODO: Make multiple channels and n requests, then run n copies
+	primaryBandwidthReader := meters.BandwidthMeter{}
 	bandwidthMeter := meters.BandwidthMeter{}
 	ch := make(chan *copyResults, 1)
 	// var requests = make([]http.Request, count)
@@ -101,18 +102,23 @@ func calculateBandwidth(urls []string) (err error) {
 		}
 		defer response.Body.Close()
 
-		// Try to get the content length
-		if bytesToRead == 0 {
+		// Set information for the leading index
+		if i == 0 {
+			// Try to get content length
 			contentLength := response.Header.Get("Content-Length")
 			calculatedLength, err := strconv.Atoi(contentLength)
 			if err != nil {
 				calculatedLength = 26214400
 			}
 			bytesToRead = uint64(calculatedLength)
+
+			tapMeter := io.TeeReader(response.Body, &primaryBandwidthReader)
+			go asyncCopy(i, ch, &bandwidthMeter, tapMeter)
+		} else {
+			// Start reading
+			go asyncCopy(i, ch, &bandwidthMeter, response.Body)
 		}
 
-		// Start reading
-		go asyncCopy(i, ch, &bandwidthMeter, response.Body)
 	}
 
 	// fmt.Printf("bytes=%d\n", bytesToRead)
@@ -128,7 +134,7 @@ func calculateBandwidth(urls []string) (err error) {
 
 			fmt.Printf("\r%s - %s",
 				format.BitsPerSec(bandwidthMeter.Bandwidth()),
-				format.Percent(bandwidthMeter.BytesRead(), bytesToRead))
+				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
 			completed++
 			// if completed >= count {
 			fmt.Printf("  \n")
@@ -138,7 +144,7 @@ func calculateBandwidth(urls []string) (err error) {
 		case <-time.After(100 * time.Millisecond):
 			fmt.Printf("\r%s - %s",
 				format.BitsPerSec(bandwidthMeter.Bandwidth()),
-				format.Percent(bandwidthMeter.BytesRead(), bytesToRead))
+				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
 		}
 	}
 }
