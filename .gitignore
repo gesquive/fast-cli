@@ -1,1 +1,7 @@
+/bin/*
+vendor/*
+dist/*
+
+*.bak
+
 fast-cli

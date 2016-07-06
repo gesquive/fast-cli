@@ -44,7 +44,7 @@ func Execute(version string) {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/.fast-cli.yaml)")
+	//TODO: Use https by default
 	RootCmd.PersistentFlags().BoolVarP(&useHTTPS, "use-https", "s", false, "Use HTTPS when connecting")
 	RootCmd.PersistentFlags().BoolVar(&showVersion, "version", false, "Display the version number and exit")
 	//TODO: Allow to estimate using time or size
@@ -54,6 +54,7 @@ func initConfig() {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	//TODO: Implement better logging and debug messages
 	if showVersion {
 		fmt.Println(displayVersion)
 		os.Exit(0)
@@ -79,7 +80,6 @@ func calculateBandwidth(urls []string) (err error) {
 	client := &http.Client{}
 	count := uint64(len(urls))
 
-	//TODO: Make multiple channels and n requests, then run n copies
 	primaryBandwidthReader := meters.BandwidthMeter{}
 	bandwidthMeter := meters.BandwidthMeter{}
 	ch := make(chan *copyResults, 1)

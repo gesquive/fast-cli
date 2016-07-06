@@ -7,7 +7,7 @@ import "fmt"
 import "path/filepath"
 import "github.com/gesquive/fast-cli/cmd"
 
-var version = "0.1.0"
+var version = "0.2.0"
 var dirty = ""
 var displayVersion string
 
