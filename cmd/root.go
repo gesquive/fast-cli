@@ -18,17 +18,15 @@ import (
 
 var displayVersion string
 var cfgFile string
-var useHTTPS bool
+var notHTTPS bool
 var showVersion bool
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "fast-cli",
 	Short: "Estimates your current internet download speed",
-	Long: `Estimates your current internet download speed using Netflix's fast.com service.
-
-fast-cli caclulates this estimate by performing a series of downloads from Netflix's fast.com servers.`,
-	Run: run,
+	Long:  `fast-cli estimates your current internet download speed by performing a series of downloads from Netflix's fast.com servers.`,
+	Run:   run,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -44,8 +42,7 @@ func Execute(version string) {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	//TODO: Use https by default
-	RootCmd.PersistentFlags().BoolVarP(&useHTTPS, "use-https", "s", false, "Use HTTPS when connecting")
+	RootCmd.PersistentFlags().BoolVarP(&notHTTPS, "no-https", "n", false, "Do not use HTTPS when connecting")
 	RootCmd.PersistentFlags().BoolVar(&showVersion, "version", false, "Display the version number and exit")
 	//TODO: Allow to estimate using time or size
 }
@@ -61,6 +58,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 	count := uint64(3)
 	fmt.Printf("Estimating current download speed\n")
+	fast.UseHTTPS = !notHTTPS
 	urls := fast.GetDlUrls(count)
 	// fmt.Printf("%+v\n", urls)
 
@@ -111,6 +109,7 @@ func calculateBandwidth(urls []string) (err error) {
 				calculatedLength = 26214400
 			}
 			bytesToRead = uint64(calculatedLength)
+			fmt.Printf("bytesToRead=%d\n", bytesToRead)
 
 			tapMeter := io.TeeReader(response.Body, &primaryBandwidthReader)
 			go asyncCopy(i, ch, &bandwidthMeter, tapMeter)
@@ -135,6 +134,9 @@ func calculateBandwidth(urls []string) (err error) {
 			fmt.Printf("\r%s - %s",
 				format.BitsPerSec(bandwidthMeter.Bandwidth()),
 				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
+			// fmt.Printf("\r%s - %d",
+			// 	format.BitsPerSec(bandwidthMeter.Bandwidth()),
+			// 	primaryBandwidthReader.BytesRead())
 			completed++
 			// if completed >= count {
 			fmt.Printf("  \n")
@@ -145,6 +147,9 @@ func calculateBandwidth(urls []string) (err error) {
 			fmt.Printf("\r%s - %s",
 				format.BitsPerSec(bandwidthMeter.Bandwidth()),
 				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
+			// fmt.Printf("\r%s - %d",
+			// 	format.BitsPerSec(bandwidthMeter.Bandwidth()),
+			// 	primaryBandwidthReader.BytesRead())
 		}
 	}
 }
