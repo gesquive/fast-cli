@@ -12,7 +12,7 @@ This project requires go 1.6+ to compile. Just run `go get -u github.com/gesquiv
 Alternately, you can download the latest release for your platform from [github](https://github.com/gesquive/fast-cli/releases).
 
 Once you have an executable, make sure to copy it somewhere on your path like `/usr/local/bin` or `C:/Program Files/`.
-If on a \*nix/mac system, make sure to run `chmod +x /path/to/digitalocean-ddns`.
+If on a \*nix/mac system, make sure to run `chmod +x /path/to/fast-cli`.
 
 ## Usage
 
@@ -26,11 +26,11 @@ Flags:
   -s, --use-https   Use HTTPS when connecting
       --version     Display the version number and exit
 ```
-<!-- Optionally, a hidden debug flag is available in case you need additional output.
+Optionally, a hidden debug flag is available in case you need additional output.
 ```console
 Hidden Flags:
   -D, --debug                  Include debug statements in log output
-``` -->
+```
 
 ## Documentation
 

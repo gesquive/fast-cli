@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	cli "github.com/gesquive/cli-log"
 	"github.com/gesquive/fast-cli/fast"
 	"github.com/gesquive/fast-cli/format"
 	"github.com/gesquive/fast-cli/meters"
@@ -18,6 +19,7 @@ import (
 
 var displayVersion string
 var cfgFile string
+var logDebug bool
 var notHTTPS bool
 var showVersion bool
 
@@ -44,26 +46,36 @@ func init() {
 
 	RootCmd.PersistentFlags().BoolVarP(&notHTTPS, "no-https", "n", false, "Do not use HTTPS when connecting")
 	RootCmd.PersistentFlags().BoolVar(&showVersion, "version", false, "Display the version number and exit")
+	RootCmd.PersistentFlags().BoolVarP(&logDebug, "debug", "D", false, "Write debug messages to console")
+
+	RootCmd.PersistentFlags().MarkHidden("debug")
 	//TODO: Allow to estimate using time or size
 }
 
 func initConfig() {
+	cli.SetLogLevel(cli.LevelInfo)
+	if logDebug {
+		cli.SetLogLevel(cli.LevelDebug)
+	}
+	if notHTTPS {
+		cli.Debugln("Not using HTTPS")
+	} else {
+		cli.Debugln("Using HTTPS")
+	}
 }
 
 func run(cmd *cobra.Command, args []string) {
-	//TODO: Implement better logging and debug messages
 	if showVersion {
-		fmt.Println(displayVersion)
+		cli.Infoln(displayVersion)
 		os.Exit(0)
 	}
 	count := uint64(3)
-	fmt.Printf("Estimating current download speed\n")
 	fast.UseHTTPS = !notHTTPS
 	urls := fast.GetDlUrls(count)
-	// fmt.Printf("%+v\n", urls)
+	cli.Debugf("Got %d from fast service\n", len(urls))
 
 	if len(urls) == 0 {
-		fmt.Printf("Using fallback endpoint\n")
+		cli.Warnf("Using fallback endpoint\n")
 		urls = append(urls, fast.GetDefaultURL())
 	}
 
@@ -74,14 +86,12 @@ func run(cmd *cobra.Command, args []string) {
 }
 
 func calculateBandwidth(urls []string) (err error) {
-	// fmt.Printf("downloading %s\n", urls)
 	client := &http.Client{}
 	count := uint64(len(urls))
 
 	primaryBandwidthReader := meters.BandwidthMeter{}
 	bandwidthMeter := meters.BandwidthMeter{}
 	ch := make(chan *copyResults, 1)
-	// var requests = make([]http.Request, count)
 	bytesToRead := uint64(0)
 	completed := uint64(0)
 
@@ -109,7 +119,7 @@ func calculateBandwidth(urls []string) (err error) {
 				calculatedLength = 26214400
 			}
 			bytesToRead = uint64(calculatedLength)
-			fmt.Printf("bytesToRead=%d\n", bytesToRead)
+			cli.Debugf("Download Size=%d\n", bytesToRead)
 
 			tapMeter := io.TeeReader(response.Body, &primaryBandwidthReader)
 			go asyncCopy(i, ch, &bandwidthMeter, tapMeter)
@@ -120,9 +130,7 @@ func calculateBandwidth(urls []string) (err error) {
 
 	}
 
-	// fmt.Printf("bytes=%d\n", bytesToRead)
-	// fmt.Printf("totalBytes=%d\n", totalBytes)
-
+	cli.Infof("Estimating current download speed\n")
 	for {
 		select {
 		case results := <-ch:
@@ -134,22 +142,14 @@ func calculateBandwidth(urls []string) (err error) {
 			fmt.Printf("\r%s - %s",
 				format.BitsPerSec(bandwidthMeter.Bandwidth()),
 				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
-			// fmt.Printf("\r%s - %d",
-			// 	format.BitsPerSec(bandwidthMeter.Bandwidth()),
-			// 	primaryBandwidthReader.BytesRead())
 			completed++
-			// if completed >= count {
 			fmt.Printf("  \n")
 			fmt.Printf("Completed in %.1f seconds\n", bandwidthMeter.Duration().Seconds())
 			return nil
-			// }
 		case <-time.After(100 * time.Millisecond):
 			fmt.Printf("\r%s - %s",
 				format.BitsPerSec(bandwidthMeter.Bandwidth()),
 				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
-			// fmt.Printf("\r%s - %d",
-			// 	format.BitsPerSec(bandwidthMeter.Bandwidth()),
-			// 	primaryBandwidthReader.BytesRead())
 		}
 	}
 }

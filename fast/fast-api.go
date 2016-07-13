@@ -5,6 +5,7 @@ import "bytes"
 import "net/http"
 import "io"
 import "regexp"
+import cli "github.com/gesquive/cli-log"
 
 // UseHTTPS sets if HTTPS is used
 var UseHTTPS = true
@@ -12,7 +13,6 @@ var UseHTTPS = true
 // GetDlUrls returns a list of urls to the fast api downloads
 func GetDlUrls(urlCount uint64) (urls []string) {
 	token := getFastToken()
-	// fmt.Printf("token=%s\n", token)
 
 	httpProtocol := "https"
 	if !UseHTTPS {
@@ -22,14 +22,17 @@ func GetDlUrls(urlCount uint64) (urls []string) {
 	url := fmt.Sprintf("%s://api.fast.com/netflix/speedtest?https=%t&token=%s&urlCount=%d",
 		httpProtocol, UseHTTPS, token, urlCount)
 	// fmt.Printf("url=%s\n", url)
+	cli.Debugf("getting url list from %s\n", url)
 
 	jsonData, _ := getPage(url)
 
 	re := regexp.MustCompile("(?U)\"url\":\"(.*)\"")
 	reUrls := re.FindAllStringSubmatch(jsonData, -1)
 
+	cli.Debug("urls:\n")
 	for _, arr := range reUrls {
 		urls = append(urls, arr[1])
+		cli.Debugf(" - %s\n", arr[1])
 	}
 
 	return
@@ -57,19 +60,19 @@ func getFastToken() (token string) {
 	scriptNames := re.FindAllString(fastBody, 1)
 
 	scriptURL := fmt.Sprintf("%s/%s", baseURL, scriptNames[0])
-	// fmt.Printf("scriptUrl=%s\n", scriptURL)
+	cli.Debugf("trying to get fast api token from %s\n", scriptURL)
 
 	// Extract the token
 	scriptBody, _ := getPage(scriptURL)
-	// fmt.Printf("got:\n-----\n%s\n-----\n", scriptBody)
 
 	re = regexp.MustCompile("token:\"[[:alpha:]]*\"")
 	tokens := re.FindAllString(scriptBody, 1)
 
 	if len(tokens) > 0 {
 		token = tokens[0][7 : len(tokens[0])-1]
+		cli.Debugf("token found: %s\n", token)
 	} else {
-		fmt.Printf("no token found\n")
+		cli.Warn("no token found\n")
 	}
 
 	return
