@@ -3,3 +3,4 @@ import:
 - package: github.com/spf13/cobra
 - package: github.com/inconshreveable/mousetrap
 - package: github.com/dustin/go-humanize
+- package: github.com/gesquive/cli-log
