@@ -16,7 +16,7 @@ import "./fast"
 import "./format"
 import "./meters"
 
-var version = "0.2.0"
+var version = "0.2.5"
 var dirty = ""
 var displayVersion string
 
