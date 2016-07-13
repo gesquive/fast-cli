@@ -3,12 +3,14 @@
 fast-cli estimates your current internet download speed by performing a series of downloads from Netflix's fast.com servers.
 
 
-### Installing
+## Installing
 
-###### Compile
+### Compile
 This project requires go 1.6+ to compile. Just run `go get -u github.com/gesquive/fast-cli` and the executable should be built for you automatically in your `$GOPATH`.
 
-###### Download
+Optionally you can run `make install` to build and copy the executable to `/usr/local/bin/` with correct permissions.
+
+### Download
 Alternately, you can download the latest release for your platform from [github](https://github.com/gesquive/fast-cli/releases).
 
 Once you have an executable, make sure to copy it somewhere on your path like `/usr/local/bin` or `C:/Program Files/`.
