@@ -12,9 +12,9 @@ import "time"
 
 import "github.com/spf13/cobra"
 import cli "github.com/gesquive/cli-log"
-import "./fast"
-import "./format"
-import "./meters"
+import "github.com/gesquive/fast-cli/fast"
+import "github.com/gesquive/fast-cli/format"
+import "github.com/gesquive/fast-cli/meters"
 
 var version = "0.2.5"
 var dirty = ""
