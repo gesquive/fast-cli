@@ -1,14 +1,12 @@
 hash: 33096889ec84b1288940bb213961337d0237781a8eeaee9852f39147e1483429
-updated: 2016-07-13T16:33:38.69090666-05:00
+updated: 2016-07-20T08:32:41.453867771-05:00
 imports:
 - name: github.com/dustin/go-humanize
   version: fef948f2d241bd1fd0631108ecc2c9553bae60bf
 - name: github.com/gesquive/cli-log
-  version: cb95e4c5e3a334f9f66047da4ae35597b2f9206a
+  version: 7303a9ac21170a6dcbfd316052762fe513456380
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/spf13/cobra
   version: 6a8bd97bdb1fc0d08a83459940498ea49d3e8c93
-- name: github.com/spf13/pflag
-  version: 367864438f1b1a3c7db4da06a2f55b144e6784e0
 devImports: []

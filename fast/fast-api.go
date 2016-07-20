@@ -22,17 +22,17 @@ func GetDlUrls(urlCount uint64) (urls []string) {
 	url := fmt.Sprintf("%s://api.fast.com/netflix/speedtest?https=%t&token=%s&urlCount=%d",
 		httpProtocol, UseHTTPS, token, urlCount)
 	// fmt.Printf("url=%s\n", url)
-	cli.Debugf("getting url list from %s\n", url)
+	cli.Debug("getting url list from %s", url)
 
 	jsonData, _ := getPage(url)
 
 	re := regexp.MustCompile("(?U)\"url\":\"(.*)\"")
 	reUrls := re.FindAllStringSubmatch(jsonData, -1)
 
-	cli.Debug("urls:\n")
+	cli.Debug("urls:")
 	for _, arr := range reUrls {
 		urls = append(urls, arr[1])
-		cli.Debugf(" - %s\n", arr[1])
+		cli.Debug(" - %s", arr[1])
 	}
 
 	return
@@ -60,7 +60,7 @@ func getFastToken() (token string) {
 	scriptNames := re.FindAllString(fastBody, 1)
 
 	scriptURL := fmt.Sprintf("%s/%s", baseURL, scriptNames[0])
-	cli.Debugf("trying to get fast api token from %s\n", scriptURL)
+	cli.Debug("trying to get fast api token from %s", scriptURL)
 
 	// Extract the token
 	scriptBody, _ := getPage(scriptURL)
@@ -70,9 +70,9 @@ func getFastToken() (token string) {
 
 	if len(tokens) > 0 {
 		token = tokens[0][7 : len(tokens[0])-1]
-		cli.Debugf("token found: %s\n", token)
+		cli.Debug("token found: %s", token)
 	} else {
-		cli.Warn("no token found\n")
+		cli.Warn("no token found")
 	}
 
 	return
