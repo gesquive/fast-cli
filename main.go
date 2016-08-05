@@ -16,7 +16,7 @@ import "github.com/gesquive/fast-cli/fast"
 import "github.com/gesquive/fast-cli/format"
 import "github.com/gesquive/fast-cli/meters"
 
-var version = "0.2.5"
+var version = "v0.2.6"
 var dirty = ""
 var displayVersion string
 
@@ -34,7 +34,7 @@ var RootCmd = &cobra.Command{
 }
 
 func main() {
-	displayVersion = fmt.Sprintf("%s v%s%s",
+	displayVersion = fmt.Sprintf("%s %s%s",
 		filepath.Base(os.Args[0]),
 		version,
 		dirty)
