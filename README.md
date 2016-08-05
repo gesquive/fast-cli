@@ -36,7 +36,7 @@ Hidden Flags:
 
 ## Documentation
 
-This documentation can be found at github.com/gesquive/digitalocean-ddns
+This documentation can be found at github.com/gesquive/fast-cli
 
 ## License
 
