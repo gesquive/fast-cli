@@ -4,7 +4,6 @@ package main
 
 import "os"
 import "fmt"
-import "path/filepath"
 import "io"
 import "net/http"
 import "strconv"
@@ -16,7 +15,7 @@ import "github.com/gesquive/fast-cli/fast"
 import "github.com/gesquive/fast-cli/format"
 import "github.com/gesquive/fast-cli/meters"
 
-var version = "v0.2.6"
+var version = "v0.2.7"
 var dirty = ""
 var displayVersion string
 
@@ -34,8 +33,7 @@ var RootCmd = &cobra.Command{
 }
 
 func main() {
-	displayVersion = fmt.Sprintf("%s %s%s",
-		filepath.Base(os.Args[0]),
+	displayVersion = fmt.Sprintf("fast-cli %s%s",
 		version,
 		dirty)
 	Execute(displayVersion)
@@ -45,6 +43,8 @@ func main() {
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute(version string) {
 	displayVersion = version
+	RootCmd.SetHelpTemplate(fmt.Sprintf("%s\nVersion:\n  github.com/gesquive/%s\n",
+		RootCmd.HelpTemplate(), displayVersion))
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
