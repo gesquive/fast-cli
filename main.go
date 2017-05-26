@@ -10,12 +10,12 @@ import "strconv"
 import "time"
 
 import "github.com/spf13/cobra"
-import cli "github.com/gesquive/cli-log"
+import "github.com/gesquive/cli"
 import "github.com/gesquive/fast-cli/fast"
 import "github.com/gesquive/fast-cli/format"
 import "github.com/gesquive/fast-cli/meters"
 
-var version = "v0.2.7"
+var version = "v0.2.8"
 var dirty = ""
 var displayVersion string
 
@@ -63,9 +63,9 @@ func init() {
 }
 
 func initLog() {
-	cli.SetLogLevel(cli.LevelInfo)
+	cli.SetPrintLevel(cli.LevelInfo)
 	if logDebug {
-		cli.SetLogLevel(cli.LevelDebug)
+		cli.SetPrintLevel(cli.LevelDebug)
 	}
 	if notHTTPS {
 		cli.Debugln("Not using HTTPS")
