@@ -49,7 +49,7 @@ func GetDefaultURL() (url string) {
 }
 
 func getFastToken() (token string) {
-	baseURL := "https://fast.com/"
+	baseURL := "https://fast.com"
 	if !UseHTTPS {
 		baseURL = "http://fast.com"
 	}
