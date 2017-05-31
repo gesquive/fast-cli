@@ -1,4 +1,7 @@
 # fast-cli
+[![Travis CI](https://img.shields.io/travis/gesquive/fast-cli/master.svg?style=flat-square)](https://travis-ci.org/gesquive/fast-cli)
+[![Software License](https://img.shields.io/badge/License-MIT-orange.svg?style=flat-square)](https://github.com/gesquive/fast-cli/blob/master/LICENSE.md)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/gesquive/fast-cli)
 
 fast-cli estimates your current internet download speed by performing a series of downloads from Netflix's fast.com servers.
 
