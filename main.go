@@ -8,6 +8,7 @@ import "io"
 import "net/http"
 import "strconv"
 import "time"
+import "strings"
 
 import "github.com/spf13/cobra"
 import "github.com/gesquive/cli"
@@ -23,6 +24,7 @@ var cfgFile string
 var logDebug bool
 var notHTTPS bool
 var showVersion bool
+var simple bool
 
 //RootCmd is the only command
 var RootCmd = &cobra.Command{
@@ -60,6 +62,8 @@ func init() {
 
 	RootCmd.PersistentFlags().MarkHidden("debug")
 	//TODO: Allow to estimate using time or size
+
+	RootCmd.PersistentFlags().BoolVar(&simple, "simple", false, "Only display final result")
 }
 
 func initLog() {
@@ -137,10 +141,11 @@ func calculateBandwidth(urls []string) (err error) {
 			// Start reading
 			go asyncCopy(i, ch, &bandwidthMeter, response.Body)
 		}
-
 	}
 
-	cli.Infof("Estimating current download speed\n")
+	if (! simple ) {
+		cli.Infof("Estimating current download speed\n")
+	}
 	for {
 		select {
 		case results := <-ch:
@@ -148,18 +153,24 @@ func calculateBandwidth(urls []string) (err error) {
 				fmt.Fprintf(os.Stdout, "\n%v\n", results.err)
 				os.Exit(1)
 			}
-
-			fmt.Printf("\r%s - %s",
-				format.BitsPerSec(bandwidthMeter.Bandwidth()),
-				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
 			completed++
-			fmt.Printf("  \n")
-			fmt.Printf("Completed in %.1f seconds\n", bandwidthMeter.Duration().Seconds())
+			if (simple) {
+				fmt.Printf("%s\n",
+				  strings.TrimSpace(format.BitsPerSec(bandwidthMeter.Bandwidth())))
+			} else {
+				fmt.Printf("\r%s - %s",
+					format.BitsPerSec(bandwidthMeter.Bandwidth()),
+					format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
+				fmt.Printf("  \n")
+				fmt.Printf("Completed in %.1f seconds\n", bandwidthMeter.Duration().Seconds())
+			}
 			return nil
 		case <-time.After(100 * time.Millisecond):
-			fmt.Printf("\r%s - %s",
-				format.BitsPerSec(bandwidthMeter.Bandwidth()),
-				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
+			if (! simple) {
+				fmt.Printf("\r%s - %s",
+					format.BitsPerSec(bandwidthMeter.Bandwidth()),
+					format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
+	    }
 		}
 	}
 }
