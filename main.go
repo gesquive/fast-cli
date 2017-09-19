@@ -1,5 +1,3 @@
-// Copyright © 2016 Gus Esquivel <gesquive@gmail.com>
-
 package main
 
 import "os"
@@ -22,6 +20,7 @@ var displayVersion string
 var cfgFile string
 var logDebug bool
 var notHTTPS bool
+var simpleProgress bool
 var showVersion bool
 
 //RootCmd is the only command
@@ -55,6 +54,7 @@ func init() {
 	cobra.OnInitialize(initLog)
 
 	RootCmd.PersistentFlags().BoolVarP(&notHTTPS, "no-https", "n", false, "Do not use HTTPS when connecting")
+	RootCmd.PersistentFlags().BoolVarP(&simpleProgress, "simple", "s", false, "Only display the result, no dynamic progress bar")
 	RootCmd.PersistentFlags().BoolVar(&showVersion, "version", false, "Display the version number and exit")
 	RootCmd.PersistentFlags().BoolVarP(&logDebug, "debug", "D", false, "Write debug messages to console")
 
@@ -140,7 +140,9 @@ func calculateBandwidth(urls []string) (err error) {
 
 	}
 
-	cli.Infof("Estimating current download speed\n")
+	if !simpleProgress {
+		cli.Infof("Estimating current download speed\n")
+	}
 	for {
 		select {
 		case results := <-ch:
@@ -149,17 +151,23 @@ func calculateBandwidth(urls []string) (err error) {
 				os.Exit(1)
 			}
 
-			fmt.Printf("\r%s - %s",
-				format.BitsPerSec(bandwidthMeter.Bandwidth()),
-				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
 			completed++
-			fmt.Printf("  \n")
-			fmt.Printf("Completed in %.1f seconds\n", bandwidthMeter.Duration().Seconds())
+			if !simpleProgress {
+				fmt.Printf("\r%s - %s",
+					format.BitsPerSec(bandwidthMeter.Bandwidth()),
+					format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
+				fmt.Printf("  \n")
+				fmt.Printf("Completed in %.1f seconds\n", bandwidthMeter.Duration().Seconds())
+			} else {
+				fmt.Printf("%s\n", format.BitsPerSec(bandwidthMeter.Bandwidth()))
+			}
 			return nil
 		case <-time.After(100 * time.Millisecond):
-			fmt.Printf("\r%s - %s",
-				format.BitsPerSec(bandwidthMeter.Bandwidth()),
-				format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
+			if !simpleProgress {
+				fmt.Printf("\r%s - %s",
+					format.BitsPerSec(bandwidthMeter.Bandwidth()),
+					format.Percent(primaryBandwidthReader.BytesRead(), bytesToRead))
+			}
 		}
 	}
 }

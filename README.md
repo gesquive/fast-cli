@@ -28,8 +28,10 @@ Usage:
   fast-cli [flags]
 
 Flags:
-  -s, --use-https   Use HTTPS when connecting
-      --version     Display the version number and exit
+  -h, --help       help for fast-cli
+  -n, --no-https   Do not use HTTPS when connecting
+  -s, --simple     Only display the result, no dynamic progress bar
+      --version    Display the version number and exit
 ```
 Optionally, a hidden debug flag is available in case you need additional output.
 ```console
