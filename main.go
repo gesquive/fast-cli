@@ -13,7 +13,7 @@ import "github.com/gesquive/fast-cli/fast"
 import "github.com/gesquive/fast-cli/format"
 import "github.com/gesquive/fast-cli/meters"
 
-var version = "v0.2.8"
+var version = "v0.2.9"
 var dirty = ""
 var displayVersion string
 
