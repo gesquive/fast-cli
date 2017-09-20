@@ -14,6 +14,7 @@ deploy:
   file:
     - dist/*-v*.tar.gz
     - dist/*-v*.zip
+  skip_cleanup: true
   on:
     tags: true
     condition: $TRAVIS_TAG =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?(-[^ \t\r\n\v\f]*)?$ && $TRAVIS_GO_VERSION =~ ^1\.8\.[0-9]+$
