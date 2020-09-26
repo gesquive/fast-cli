@@ -59,16 +59,16 @@ install: build ## Install the binaries on this computer
 	install -m 755 ./${BIN_NAME} ${DESTDIR}/usr/local/bin/${BIN_NAME}
 
 .PHONY: deps
-deps: glide ## Download project dependencies
-	glide install
+deps: ## Download project dependencies
+	${GOCC} mod download
 
 .PHONY: test
-test: glide ## Run golang tests
-	${GOCC} test $(shell glide novendor)
+test: ## Run golang tests
+	${GOCC} test $(${GOCC} list ./... | grep -v /vendor/)
 
 .PHONY: bench
-bench: glide ## Run golang benchmarks
-	${GOCC} test -benchmem -bench=. $(shell glide novendor)
+bench: ## Run golang benchmarks
+	${GOCC} test -benchmem -bench=.
 
 .PHONY: clean
 clean: ## Clean the directory tree of artifacts
@@ -81,7 +81,7 @@ clean: ## Clean the directory tree of artifacts
 build-all: gox
 	gox -verbose \
 	-ldflags "-X main.version=${VERSION} -X main.dirty=${GIT_DIRTY}" \
-	-os="linux darwin windows" \
+	-os="linux netbsd windows" \
 	-arch="amd64 386" \
 	-output="dist/{{.OS}}-{{.Arch}}/{{.Dir}}" .
 
@@ -89,8 +89,8 @@ build-all: gox
 dist: build-all ## Cross compile the full distribution
 	$(PKG_DST) cp ../README.md "{}" \;
 	$(PKG_DST) cp ../LICENSE "{}" \;
-	$(eval PKG=darwin-386) $(PKG_TAR)
-	$(eval PKG=darwin-amd64) $(PKG_TAR)
+	$(eval PKG=netbsd-386) $(PKG_TAR)
+	$(eval PKG=netbsd-amd64) $(PKG_TAR)
 	$(eval PKG=linux-386) $(PKG_TAR)
 	$(eval PKG=linux-amd64) $(PKG_TAR)
 	$(eval PKG=windows-386) $(PKG_ZIP)
@@ -106,11 +106,6 @@ link: $(INSTALL_PATH) ## Symlink this project into the GOPATH
 $(INSTALL_PATH):
 	@mkdir -p `dirname $(INSTALL_PATH)`
 	@ln -s $(PWD) $(INSTALL_PATH) >/dev/null 2>&1
-
-.PHONY: glide
-glide:
-	@command -v glide >/dev/null 2>&1 || \
-	echo "Installing glide" && ${GOCC} get -u github.com/Masterminds/glide
 
 .PHONY: gox
 gox:
