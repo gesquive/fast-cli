@@ -1,11 +1,14 @@
 package fast
 
-import "fmt"
-import "bytes"
-import "net/http"
-import "io"
-import "regexp"
-import "github.com/gesquive/cli"
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"net/http"
+	"regexp"
+
+	"github.com/gesquive/cli"
+)
 
 // UseHTTPS sets if HTTPS is used
 var UseHTTPS = true
@@ -53,7 +56,10 @@ func getFastToken() (token string) {
 	if !UseHTTPS {
 		baseURL = "http://fast.com"
 	}
-	fastBody, _ := getPage(baseURL)
+	fastBody, err := getPage(baseURL)
+	if err != nil {
+		cli.Fatalln(err)
+	}
 
 	// Extract the app script url
 	re := regexp.MustCompile("app-.*\\.js")
