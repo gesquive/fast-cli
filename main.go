@@ -182,10 +182,3 @@ func asyncCopy(index uint64, channel chan *copyResults, writer io.Writer, reader
 	bytesWritten, err := io.Copy(writer, reader)
 	channel <- &copyResults{index, uint64(bytesWritten), err}
 }
-
-func sumArr(array []uint64) (sum uint64) {
-	for i := 0; i < len(array); i++ {
-		sum = sum + array[i]
-	}
-	return
-}
